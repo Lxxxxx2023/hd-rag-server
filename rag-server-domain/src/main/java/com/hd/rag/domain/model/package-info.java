@@ -1,0 +1,1 @@
+package com.hd.rag.domain.model;

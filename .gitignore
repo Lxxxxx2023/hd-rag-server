@@ -1,0 +1,18 @@
+target/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+.back*
+*.back*
+
+### VS Code ###
+.vscode/
+
+# AI Log Plugin 推荐忽略项
+.specstory/
+
+### claude ###
+.claude/settings.local.json
