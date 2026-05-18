@@ -17,16 +17,17 @@
 | 3 | Service 独立存储 chunk + embedding | 授权触发 Service 级 Pipeline |
 | 4 | 统一 RAGGraph（DAG 可编排） | 检索 + 生成在同一 DAG，分期实现 |
 | 5 | 算子自描述 Schema | 类型安全，编排前可校验 |
-| 6 | 文档保留原始结构 | 分块策略按文档类型自动适配 |
-| 7 | 首期支持 PDF + Markdown | 后续扩展更多格式 |
+| 6 | 文档保留原始结构 | ContentTree 统一中间格式，Markdown 是渲染结果，分块策略操作 ContentTree |
+| 7 | 多源数据统一摄入 | 通过 IParserStrategy + ParserRegistry 支持 PDF/HTML/Markdown/DOCX/TXT，后期扩展 Excel/JSON/代码/DB/图片OCR |
 | 8 | Prompt 三层模板 | 平台预置 → Service 自定义 → 调用时覆盖 |
+| 9 | 文件夹递归处理 | 由 Case 层 FolderImportCase 编排，递归遍历 + 类型检测 + 路由解析器 |
 
 ## Capability Domains
 
 - **Platform Architecture**: Service/KB 资源模型、多租户、授权
-- **Document Processing**: 导入 → 解析 → 清洗 → 分块 → 向量化 → 索引
-- **Retrieval Pipeline**: DAG 编排检索、混合检索、重排序、降级
-- **Generation Pipeline**: 上下文组装、Prompt 模板、LLM 调用、引用溯源
+- **Index Domain (写路径)**: 多源摄入 → 统一解析(CanonicalDocument/ContentTree) → 清洗 → 分块 → 向量化 → 写入索引。拥有 Documents、Chunks、Vectors。关注吞吐量和完整性。
+- **Query Domain (读路径)**: 查询预处理 → 检索(混合/融合) → 重排序 → 上下文组装 → Prompt 模板 → LLM 生成 → 引用溯源 → 后处理。读取 Index 的数据。关注延迟和相关性。
+- **DAG Execution Engine** (`infrastructure/dag/`): 纯技术编排组件，提供拓扑排序、并行调度、超时降级能力。不依赖任何 Domain，只依赖 types/ 中的数据结构。算子由 Index/Query Domain 定义，Case 层负责桥接
 
 ## Non-goals
 
