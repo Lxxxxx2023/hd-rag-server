@@ -21,7 +21,10 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>rag-server-infrastructure</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.rag-servers</groupId>
+            <artifactId>rag-server-domain</artifactId>
+        </dependency>
         <!-- Spring Boot Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
