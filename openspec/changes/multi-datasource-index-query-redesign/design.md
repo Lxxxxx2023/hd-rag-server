@@ -220,14 +220,18 @@ public interface ISourceConnector {
     ConnectionTestResult testConnection(DataSourceConfig config);
 }
 
-/** Connector 的产出物，交给 IParserStrategy 继续处理 */
+/**
+ * Connector 的产出物，交给 IParserStrategy 继续处理。
+ * Connector 的唯一职责是"拉取原始字节"，文本提取和结构化解析由 Parser 完成。
+ * mimeType 是 Connector 的初步判断（来自文件扩展名 / Content-Type 头），
+ * ParserRegistry 以它为线索选择解析器，结合 probe(rawContent) 做最终判定。
+ */
 @Value public class RawSourceDocument {
     String externalId;
     String externalVersion;
     SourceType sourceType;
-    String mimeType;
-    byte[] rawContent;            // 原始字节，或 null（对 URL/API 类型，Connector 内部拉取）
-    @Nullable String rawText;     // 纯文本内容（URL/API 返回文本时直接提供）
+    @Nullable String mimeType;    // Connector 初步判断，可能不准（如扩展名与实际内容不符）
+    byte[] rawContent;            // 原始字节，始终有值 — 即使是 URL/API，Connector 也原样返回响应体字节
     Map<String, Object> metadata; // 来源特有元数据（飞书的 pageToken、URL 的 httpStatus 等）
 }
 ```
