@@ -2,7 +2,7 @@
 
 ## Overview
 
-定义 RAG 中台的鉴权、授权、API Key 管理和安全约束。
+定义 RAG 中台的鉴权、授权、API Key 管理、DataSource 安全、审计和网络安全。
 
 ## Requirements
 
@@ -18,7 +18,7 @@
 
 ### RBAC (平台级别)
 
-- **REQ-SEC-008**: admin — 全局管理权限（Service/KB CRUD, 授权管理, API Key 管理）
+- **REQ-SEC-008**: admin — 全局管理权限（Service/KB CRUD, 授权管理, API Key 管理, DataSource 管理）
 - **REQ-SEC-009**: operator — 只读 + 监控告警配置 + 文档管理
 - **REQ-SEC-010**: viewer — 只读所有资源 + 监控面板
 
@@ -29,14 +29,26 @@
 - **REQ-SEC-013**: 文档上传前校验操作者对该 KB 的 write 权限
 - **REQ-SEC-014**: 生成响应中的 PII 脱敏（可选，Service 级别配置）
 
+### DataSource 安全
+
+- **REQ-SEC-020**: DataSourceConfig 中的敏感字段（appSecret / token / password / connectionString）在持久化时使用 AES-256 加密，读取时解密；加密密钥通过 KMS 或环境变量注入，不写入配置文件
+- **REQ-SEC-021**: 飞书 Webhook 验证 X-Lark-Signature 签名，语雀 Webhook 验证 HMAC-SHA256 签名，验签失败返回 401
+- **REQ-SEC-022**: DataSource API 的响应中不返回解密后的敏感字段值（appSecret / token / password 返回 `"****"`）
+
 ### 审计日志
 
-- **REQ-SEC-015**: 所有 API 操作记录审计日志，包含：操作人/时间/资源类型/资源ID/操作类型/来源IP/结果
-- **REQ-SEC-016**: 审计日志不可篡改、不可删除（合规要求）
-- **REQ-SEC-017**: 审计日志支持按 Service、时间范围、操作类型检索
+- **REQ-SEC-030**: 所有 API 操作记录审计日志，包含：操作人/时间/资源类型/资源ID/操作类型/来源IP/结果
+- **REQ-SEC-031**: 审计日志不可篡改、不可删除（合规要求）
+- **REQ-SEC-032**: 审计日志支持按 Service、时间范围、操作类型检索
+
+### SQL 安全
+
+- **REQ-SEC-040**: sql_validate 强制只读校验：禁止 DML（INSERT/UPDATE/DELETE）、DDL（CREATE/DROP/ALTER）、事务控制（BEGIN/COMMIT/ROLLBACK）
+- **REQ-SEC-041**: sql_execute 使用只读数据库账号，权限限定为 SELECT
+- **REQ-SEC-042**: SQL 执行超时控制（timeoutMs），默认 5s
 
 ### 网络安全
 
-- **REQ-SEC-018**: 支持 IP 白名单限制（可选，Service 级别配置）
-- **REQ-SEC-019**: 所有外部 API 强制 HTTPS
-- **REQ-SEC-020**: 对内 gRPC 支持 mTLS（可选）
+- **REQ-SEC-050**: 支持 IP 白名单限制（可选，Service 级别配置）
+- **REQ-SEC-051**: 所有外部 API 强制 HTTPS
+- **REQ-SEC-052**: 对内 gRPC 支持 mTLS（可选）
