@@ -13,7 +13,7 @@ public interface IDataLoadService {
      * @param multipartFile 文件
      * @param kbId 知识库id
      */
-    void loadDataByFile(MultipartFile multipartFile, String kbId);
+    void loadDataByFile(MultipartFile multipartFile, String kbId) throws Exception;
 
     /**
      * 根据数据源 手动触发数据加载

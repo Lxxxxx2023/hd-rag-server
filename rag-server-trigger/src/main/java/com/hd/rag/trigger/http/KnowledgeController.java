@@ -26,7 +26,11 @@ public class KnowledgeController implements KnowledgeServer {
     @Override
     @PostMapping("/loadDataByFile")
     public void loadDataByFile(MultipartFile multipartFile, String kbId) {
-        dataLoadService.loadDataByFile(multipartFile, kbId);
+        try {
+            dataLoadService.loadDataByFile(multipartFile, kbId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

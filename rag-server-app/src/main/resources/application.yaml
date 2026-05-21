@@ -5,6 +5,13 @@ spring:
   application:
     name: hd-rag-server
 
+  # ==================== OpenAI Embedding ====================
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:your-api-key-here}
+      embedding:
+        model: text-embedding-3-small
+
   # ==================== MySQL Datasource (Druid) ====================
   datasource:
     url: jdbc:mysql://localhost:3306/rag_server?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true

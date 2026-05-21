@@ -2,6 +2,10 @@ package com.hd.rag.domain.index.model.entity;
 
 import com.hd.rag.domain.index.model.valObj.DataSourceType;
 import io.micrometer.common.lang.Nullable;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
@@ -11,6 +15,10 @@ import java.util.Map;
  * mimeType 是 Connector 的初步判断（来自文件扩展名 / Content-Type 头），
  * ParserRegistry 以它为线索选择解析器，结合 probe(rawContent) 做最终判定。
  */
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class RawSourceDocumentEntity{
     private String externalId;
     private String externalVersion;

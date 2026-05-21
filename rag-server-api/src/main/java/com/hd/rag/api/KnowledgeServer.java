@@ -17,7 +17,7 @@ public interface KnowledgeServer {
      * @param multipartFile 文件
      * @param kbId 知识库id
      */
-    void loadDataByFile(MultipartFile multipartFile, String kbId);
+    void loadDataByFile(MultipartFile multipartFile, String kbId) throws Exception;
 
     /**
      * 创建知识库数据源
