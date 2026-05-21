@@ -21,12 +21,15 @@
 | 5 | 算子自描述 Schema | 类型安全，编排前可校验 |
 | 6 | 文档保留原始结构 | ContentTree 统一中间格式，Markdown 是渲染结果，分块策略操作 ContentTree |
 | 7 | DataSource 连接层 | 在 KB 和 Document 之间增加连接配置与同步状态管理，ISourceConnector 策略接口统一 URL/飞书/语雀/数据库/文件五类数据源的接入与增量同步 |
-| 8 | DATABASE 源双轨处理 | 文本列走 ContentTree → Chunk → Vector 路径；Schema 信息单独写入 SchemaIndex 供 Text-to-SQL 使用 |
-| 9 | intent_detect 升级为强制路由器 | 输出 DOCUMENT_SEARCH / DATA_QUERY / HYBRID 三种意图，决定后续执行路径 |
-| 10 | Text-to-SQL 独立 Query 路径 | schema_retrieve → text_to_sql → sql_validate → sql_execute → result_format，与文档检索路径解耦 |
-| 11 | KG 作为 Index/Query Domain 的延伸 | 不新建独立 Domain，策略接口分别定义在 domain/index/ 和 domain/query/，四期渐进式演进（架构预留 → 结构图谱 → 实体图谱 → 全局图谱） |
-| 12 | Prompt 三层模板 | 平台预置 → Service 自定义 → 调用时覆盖 |
-| 13 | 文件夹递归处理 | 由 Case 层 FolderImportCase 编排，递归遍历 + 类型检测 + 路由解析器 |
+| 8 | Connector 流式拉取 | Connector 不返回 `List<RawSourceDocument>`，改用游标/分页模式（`fetchMetadata` + `fetchContent`），大数据源不退 OOM |
+| 9 | Pipeline 编排器，非 Kafka 链 | 处理管道（parse→clean→chunk→embed→index）由 Case 层编排器直接调用，状态存 DB。Kafka 仅发布最终业务事件（document.indexed、sync.completed、schema.indexed） |
+| 10 | DATABASE 源双轨处理 | 文本列走 ContentTree → Chunk → Vector 路径；Schema 信息单独写入 SchemaIndex 供 Text-to-SQL 使用 |
+| 11 | intent_detect 升级为强制路由器 | 输出 DOCUMENT_SEARCH / DATA_QUERY / HYBRID 三种意图，决定后续执行路径 |
+| 12 | Text-to-SQL 独立 Query 路径 | schema_retrieve → text_to_sql → sql_validate → sql_execute → result_format，与文档检索路径解耦 |
+| 13 | KG 作为 Index/Query Domain 的延伸 | 不新建独立 Domain，策略接口分别定义在 domain/index/ 和 domain/query/，四期渐进式演进（架构预留 → 结构图谱 → 实体图谱 → 全局图谱） |
+| 14 | Prompt 三层模板 | 平台预置 → Service 自定义 → 调用时覆盖 |
+| 15 | 文件夹递归处理 | 由 Case 层 FolderImportCase 编排，递归遍历 + 类型检测 + 路由解析器 |
+| 16 | Workload 路由：入口线程判断 | 不预测数据量，只判断调用方是否等同步返回。HTTP 请求线程 → 小文件同步/大文件异步；定时任务/Webhook → 一律异步 |
 
 ## Capability Domains
 

@@ -211,12 +211,34 @@ public class DataSource {
 
 ### ISourceConnector 策略接口
 
+Connector 不一次性返回全量数据，改用**游标/分页模式**。先拉取轻量级元数据（externalId + version），比对增量后再按需拉取单篇内容。避免大数据源（如飞书 5000 篇、DB 百万行）撑爆内存。
+
 ```java
 public interface ISourceConnector {
     DataSourceType getType();
-    List<RawSourceDocument> fetchAll(DataSource source);
-    List<RawSourceDocument> fetchUpdated(DataSource source, Instant since);
-    List<RawSourceDocument> handleWebhook(DataSource source, WebhookPayload payload);
+
+    // 分页拉取元数据（只含 externalId + version + title，体积极小）
+    @Value public class FetchResult {
+        List<DocumentMeta> documents;
+        @Nullable String nextCursor;   // 飞书 page_token / DB offset / URL depth
+        boolean hasMore;
+    }
+    @Value public class DocumentMeta {
+        String externalId;
+        String externalVersion;
+        @Nullable String title;
+        @Nullable Long contentLength;
+    }
+
+    FetchResult fetchMetadata(DataSource source, @Nullable String cursor);
+
+    // 按需拉取单篇内容，只有确认需要处理（版本变化）才调用
+    RawSourceDocument fetchContent(DataSource source, String externalId);
+
+    // Webhook 推送：传入 payload 和回调，Connector 按需调用回调拉取
+    void handleWebhook(DataSource source, WebhookPayload payload,
+                       Consumer<RawSourceDocument> handler);
+
     ConnectionTestResult testConnection(DataSourceConfig config);
 }
 
@@ -230,15 +252,17 @@ public interface ISourceConnector {
 }
 ```
 
+**Connector 不负责 judge 哪些文档需要处理** — 版本比对由 Case 层的 `DataSourceSyncCase` 负责。Connector 的职责仅为：拉取外部数据，产出 `RawSourceDocument`。
+
 各类型实现：
 
-| 实现类 | 核心依赖 | 说明 |
-|--------|---------|------|
-| `UrlConnector` | HttpClient + Jsoup | 按 depth/scope 爬取，可选 Playwright JS 渲染 |
-| `FeishuConnector` | 飞书开放平台 API | OAuth 2.0，支持 Webhook |
-| `YuqueConnector` | 语雀 API | Personal Token，支持 Markdown 导出 |
-| `DatabaseConnector` | JDBC | 按 TableConfig 拉取，textColumns 走文档路径，schema 走 SchemaIndex |
-| `FileConnector` | 对象存储 SDK | 读取文件字节，交给 IParserStrategy（复用现有 Parser） |
+| 实现类 | 核心依赖 | fetchMetadata 方式 | fetchContent 方式 |
+|--------|---------|--------------------|---------------------|
+| `UrlConnector` | HttpClient + Jsoup | 按 depth BFS 渐进爬取，每层为一个 page | Jsoup 抓取单页正文 |
+| `FeishuConnector` | 飞书开放平台 API | API 分页 `page_token`，每页 100 条节点元数据 | API 获取单篇 doc 的 Markdown |
+| `YuqueConnector` | 语雀 API | API 分页 `offset`，每页 100 条文档摘要 | API 导出单篇 Markdown |
+| `DatabaseConnector` | JDBC | `COUNT(*)` + `LIMIT/OFFSET` 分页拉取主键和增量列值 | `SELECT textColumns WHERE pk = ?` 单行拉取 |
+| `FileConnector` | 对象存储 SDK | 列目录 + 文件元数据（size/mtime），按 marker 分页 | 读取单文件字节 |
 
 ### DataSourceDocument（增量同步映射表）
 
@@ -266,51 +290,199 @@ public class SchemaIndex {
 }
 ```
 
-### Index Pipeline（更新后）
+## Index Pipeline Architecture
 
-#### 文档类数据源（URL / 飞书 / 语雀 / 文件）
+### 核心原则：编排器负责流程，DB 负责状态，Kafka 仅发业务事件
 
-```
-DataSource
-    │
-    ▼
-ISourceConnector.fetchAll() / fetchUpdated() / handleWebhook()
-    │  产出 RawSourceDocument[]
-    ▼  Kafka: datasource.fetched
-IParserStrategy.parse(RawSourceDocument) → CanonicalDocument (ContentTree)
-    │
-    ▼  Kafka: doc.parsed
-IDocumentCleaner.clean()
-    │
-    ▼  Kafka: doc.chunked
-IChunkingStrategy.chunk() → Chunk[]
-    │
-    ▼  Kafka: doc.embedded
-IEmbeddingService.embed() → Vector[]
-    │
-    ▼  Kafka: doc.indexed
-IIndexWriter.write() → pgvector + ES
-```
+处理管道（parse → clean → chunk → embed → index）的流程控制在 **Case 层的编排器**中完成，不由 Kafka 串联。Kafka 只用于发布最终的业务成功/失败事件，通知外部系统。
 
-#### 数据库数据源（DATABASE）分流
+**理由：**
+- **状态管理单一真相来源** — 文档处理状态存 DB，排查时一条 SQL 即可，无需跨 Topic 追踪 offset
+- **流程演进灵活** — 加/减/插步骤改编排器代码即可，不需要新增 Topic 和 Consumer
+- **Phase 2/3 DAG Engine 无缝替换** — 编排器从线性 Pipeline 换成 DAG GraphExecutor，对外接口不变，Kafka 代码零改动
+- **批量处理自然** — 编排器可以攒 100 条再批量调 Embedding API，Kafka Consumer 则需要额外攒批逻辑
 
 ```
-DatabaseConnector.fetch()
+       Case 层                                 Domain 层
+═════════════════════════════════════════════════════════════════
+
+  IndexPipeline                           IParser         IChunking       IEmbedding     IIndexWriter
+  (编排器)      doc.status                .parse()        .chunk()        .embed()       .write()
+     │         = PARSING                                                
+     ├──▶ ① ──────────────────────────────────────────────────────────────────────────────────▶
+     │         = CHUNKING                                                    ║
+     ├──▶ ②  ...... ──────────────────────────────────────────────────────▶   每个步骤:
+     │         = EMBEDDING                                                       更新 DB 状态
+     ├──▶ ③  ......  ...... ─────────────────────────────────────────────────▶   处理异常
+     │         = INDEXING                                                       重试
+     ├──▶ ④  ......  ......  ...... ─────────────────────────────────────────▶
+     │         = READY
+     └──▶ ⑤ ──▶ 发布 document.indexed 事件（Kafka）──▶ Query 域感知
+```
+
+### Workload-Based Execution Strategy
+
+不预测数据量大小（预测不了——URL 不知道多少页、DB 不知道多少行），只判断一件事：**调用方是否在等同步返回**。
+
+```
+入口触发                    执行策略                    说明
+────────────────────────────────────────────────────────────────
+上传 1 个小文件            同步直通                     在线等结果，直接返回
+  (HTTP, file < 10MB)
+
+上传大文件 / 批量文件      写 DB + 返回 202             返回 taskId，轮询进度
+  (HTTP, file >= 10MB)    → 后台线程池处理
+
+DataSource 手动同步        写 SynkTask + 返回 202        返回 taskId，轮询进度
+  (HTTP)                  → Spring @Async 消费
+
+Webhook 推送              验证签名 → 写 DB → 200         Connector 回调拉取
+  (HTTP, 立即回 200)      → @Async 处理
+
+定时任务                   写 SynkTask                    离线批量处理
+  (Scheduler 线程)        → @Async 消费
+```
+
+```java
+// Case 层的路由逻辑（伪代码）
+public class DocumentLoadCase {
+
+    public Object execute(RawSourceDocument source, TriggerType trigger) {
+        if (trigger == TriggerType.HTTP_FILE_UPLOAD) {
+            if (source.getContentSize() < SINGLE_FILE_THRESHOLD) {
+                return pipeline.runSync(source);  // 同步跑，返回完整 Document
+            } else {
+                documentRepository.createPending(source);
+                applicationEventPublisher.publish(new DocImportedEvent(source.getId()));
+                return TaskResponse(202, "处理中", source.getId());  // 立即返回
+            }
+        }
+        // DataSource 同步、Webhook、定时任务 — 一律异步
+        documentRepository.createPending(source);
+        applicationEventPublisher.publish(new DocImportedEvent(source.getId()));
+        return TaskResponse(202, "已触发", source.getId());
+    }
+}
+```
+
+### IndexPipeline（线性编排器，Case 层）
+
+```java
+public class IndexPipeline {
+
+    private final IParserStrategy parser;
+    private final IDocumentCleaner cleaner;
+    private final IChunkingStrategy chunker;
+    private final IEmbeddingService embedder;
+    private final IIndexWriter indexWriter;
+    private final DocumentRepository documentRepo;
+    private final ApplicationEventPublisher events;
+
+    // 同步模式：单文档完整处理，HTTP 线程直接跑
+    public DocumentResult runSync(RawSourceDocument rawDoc) {
+        Document doc = Document.from(rawDoc);
+        documentRepo.save(doc);
+        return run(doc);
+    }
+
+    // 异步模式：后台线程池 / @Async 调用，逐文档推进
+    public void runAsync(String docId) {
+        Document doc = documentRepo.findById(docId);
+        try {
+            run(doc);
+        } catch (Exception e) {
+            doc.setStatus(FAILED);
+            doc.setErrorMessage(e.getMessage());
+            documentRepo.save(doc);
+        }
+    }
+
+    private DocumentResult run(Document doc) {
+        step(doc, PARSING,  () -> { doc.setContent(parser.parse(doc.getRawContent())); });
+        step(doc, CLEANING, () -> cleaner.clean(doc.getContent()));
+        step(doc, CHUNKING, () -> { doc.setChunks(chunker.chunk(doc.getContent(), config)); });
+        step(doc, EMBEDDING,() -> { doc.setVectors(embedder.embedBatch(doc.getChunks())); });
+        step(doc, INDEXING, () -> indexWriter.bulkWrite(doc.getChunks()));
+
+        doc.setStatus(READY);
+        documentRepo.save(doc);
+
+        // 仅最终成功发 Kafka 业务事件
+        events.publishEvent(new DocumentIndexedEvent(doc.getId(), doc.getKbId()));
+        return DocumentResult.from(doc);
+    }
+
+    private void step(Document doc, Status status, Runnable action) {
+        doc.setStatus(status);
+        documentRepo.save(doc);  // 状态落库，断点可恢复
+        action.run();
+    }
+}
+```
+
+### 异步 Worker：Spring @Async + ApplicationEvent
+
+```
+Phase 1 异步机制：Spring 内置的 ApplicationEvent + @Async
+
+  @EventListener
+  @Async
+  public void onDocImported(DocImportedEvent event) {
+      pipeline.runAsync(event.getDocId());
+  }
+
+优点: 无额外中间件，进程内解耦，与 Kafka 消费者代码结构一致
+升级: Phase 2 需要跨服务消费时，@EventListener → @KafkaListener，业务逻辑复用
+```
+
+### 批量处理：Poller / 攒批
+
+```java
+// 对于 Embedding 和 Index Write 等外部 API 调用，编排器自然攒批
+public class IndexPipeline {
+
+    // 单文档时：embedBatch 传入单元素 List
+    public DocumentResult runSync(RawSourceDocument rawDoc) { ... }
+
+    // 批量时：攒够 100 篇，一次 Embedding API 调用
+    @EventListener
+    @Async
+    public void onBatchImported(BatchImportedEvent event) {
+        List<Document> docs = event.getDocumentIds().stream()
+            .map(documentRepo::findById).collect(toList());
+        
+        // 批量 Embedding（一次 HTTP 调用 100 条文本）
+        List<Chunk> allChunks = docs.stream()
+            .flatMap(d -> d.getChunks().stream()).collect(toList());
+        Map<String, float[]> vectors = embedder.embedBatch(allChunks);
+        
+        // 批量写入索引
+        indexWriter.bulkWrite(docs);
+        
+        events.publishEvent(new BatchIndexedEvent(docIds));
+    }
+}
+```
+
+### 数据库数据源（DATABASE）分流
+
+```
+DatabaseConnector.fetchMetadata(cursor)
     │
-    ├── textColumns ──────→ RawSourceDocument（每行一个）
-    │                             └→ 进入上方文档管道
+    ├── textColumns ──→ 每条 RowMeta 确认版本变化后
+    │     fetchContent(externalId) → RawSourceDocument → 进入文档管道
     │
-    └── schema ────────────→ SchemaIndexWriter.write()
-                                  └→ schema_index 表
+    └── schema → SchemaIndexWriter.write() → schema_index 表
 ```
 
 ### Index OperatorType 全集
 
 ```
-parse, clean, chunk, embed, index_write          — 文档处理（已有）
-datasource_fetch, datasource_sync                — 数据源同步（新增）
-schema_index_write                               — Schema 索引写入（新增）
-entity_extract, relation_extract, graph_index    — KG 抽取与写入（新增）
+parse, clean, chunk, embed, index_write          — 文档处理
+datasource_fetch                                  — 数据源元数据拉取
+datasource_sync                                   — 同步编排（拉取→比对→发布）
+schema_index_write                               — Schema 索引写入
+entity_extract, relation_extract, graph_index    — KG 抽取与写入（Phase 2/3）
 ```
 
 ---
@@ -665,15 +837,17 @@ audit_logs          — 审计日志（按月分表）
 
 ### Kafka Topics 全集
 
-```
-Index 处理链:
-  doc.imported → doc.parsed → doc.chunked → doc.embedded → doc.indexed → doc.failed
+Kafka 仅用于广播**对外有意义的业务事件**，不用于内部处理管道的流程控制。
 
-DataSource 同步（新增）:
-  datasource.sync.requested  — 触发数据源同步
-  datasource.fetched         — Connector 拉取完成，触发解析管道
-  schema.indexed             — SchemaIndex 写入完成
-  datasource.sync.completed  — DataSource 同步完成（含统计信息）
+```
+业务事件（外部关心）:
+  document.indexed          — 文档索引完成（含 chunks/vectors），Query 域可检索
+  datasource.sync.completed — DataSource 同步结束（含新增/更新/删除统计）
+  schema.indexed            — SchemaIndex 写入完成
+
+Design principle:
+  处理管道状态流转（parse→clean→chunk→embed→index）由 IndexPipeline 编排器控制，状态存 DB。
+  Kafka 不参与流程编排，不表达"内部走到哪一步"。
 ```
 
 ### 新增数据库表
@@ -716,6 +890,22 @@ CREATE TABLE schema_index (
 );
 
 ALTER TABLE raw_documents ADD COLUMN datasource_id VARCHAR(36);
+
+CREATE TABLE sync_tasks (
+    id VARCHAR(36) PRIMARY KEY,
+    datasource_id VARCHAR(36) NOT NULL,
+    trigger_type VARCHAR(16) NOT NULL,  -- MANUAL | SCHEDULED | WEBHOOK
+    status VARCHAR(16) NOT NULL,        -- RUNNING | COMPLETED | FAILED
+    total_count INT DEFAULT 0,
+    processed_count INT DEFAULT 0,
+    added_count INT DEFAULT 0,
+    updated_count INT DEFAULT 0,
+    deleted_count INT DEFAULT 0,
+    error_log JSONB,                    -- [{docId, error}, ...]
+    started_at TIMESTAMP NOT NULL,
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL
+);
 ```
 
 ### Management API 全集
@@ -729,6 +919,8 @@ KB CRUD:
 
 Document 管理:
   POST/GET/DELETE /api/v1/knowledge-bases/{kbId}/documents
+  GET  /api/v1/knowledge-bases/{kbId}/documents/{docId}/status  — 单文档处理进度
+  GET  /api/v1/knowledge-bases/{kbId}/documents/status?ids=...  — 批量查询文档处理状态
 
 Grant 管理:
   POST/DELETE /api/v1/knowledge-bases/{kbId}/grants
