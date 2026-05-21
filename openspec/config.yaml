@@ -34,8 +34,10 @@ context: |
 
 rules:
   proposal:
-    - 中文撰写，包含 Summary / Motivation / Core Design Decisions / Non-goals
+    - 中文撰写，必须包含 Summary / User Stories / Motivation / Core Design Decisions / Non-goals 五个章节
+    - User Stories 章节要从用户动作出发，每条故事包含"作为…我想…以便…"三要素，覆盖所有核心用户角色和关键操作路径
     - 设计决策用表格，含序号、决策、说明三列
+    - 所有业务能力必须能追溯到用户故事，无用户故事支撑的能力不纳入提案范围
   design:
     - 中文撰写，标注 DDD 分层依赖方向
     - 数据模型用 Java 代码块，策略接口用 Java interface 代码块
