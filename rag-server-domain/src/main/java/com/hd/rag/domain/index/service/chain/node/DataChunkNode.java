@@ -1,6 +1,5 @@
 package com.hd.rag.domain.index.service.chain.node;
 
-import com.hd.rag.domain.index.model.aggregate.CanonicalDocumentAggregate;
 import com.hd.rag.domain.index.service.chain.DataHandleContent;
 import com.hd.rag.domain.index.service.chain.DataIndexResult;
 import com.hd.rag.domain.index.service.chain.IDataIndexChain;
@@ -26,11 +25,6 @@ public class DataChunkNode implements IDataIndexChain {
 
     @Override
     public DataIndexResult handle(DataHandleContent dataHandleContent) {
-        CanonicalDocumentAggregate aggregate = dataHandleContent.getCanonicalDocumentAggregate();
-        if (aggregate != null && aggregate.getContent() != null) {
-            List<String> chunks = splitText(aggregate.getContent(), CHUNK_SIZE, OVERLAP);
-            aggregate.setChunks(chunks);
-        }
         return dataVectorizationNode.handle(dataHandleContent);
     }
 

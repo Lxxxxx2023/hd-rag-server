@@ -1,7 +1,7 @@
 package com.hd.rag.domain.index.service.parse;
 
-import com.hd.rag.domain.index.model.aggregate.CanonicalDocumentAggregate;
-import com.hd.rag.domain.index.model.entity.RawSourceDocumentEntity;
+import com.hd.rag.domain.index.model.valObj.CanonicalDocument;
+import com.hd.rag.domain.index.service.chain.RawData;
 
 public interface IParseStrategy {
 
@@ -14,8 +14,8 @@ public interface IParseStrategy {
 
     /**
      * 解析数据
-     * @param rawSourceDocumentEntity 数据
+     * @param rawData 源数据
      * @return 统一的文档数据
      */
-    CanonicalDocumentAggregate parse(RawSourceDocumentEntity rawSourceDocumentEntity);
+    CanonicalDocument parse(RawData rawData);
 }

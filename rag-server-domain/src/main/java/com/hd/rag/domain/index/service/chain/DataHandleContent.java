@@ -1,30 +1,21 @@
 package com.hd.rag.domain.index.service.chain;
 
-import com.hd.rag.domain.index.model.aggregate.CanonicalDocumentAggregate;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.hd.rag.domain.index.model.valObj.CanonicalDocument;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
- * 数据索引上下文
+ * 数据处理上下文
  */
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class DataHandleContent {
 
     /**
-     * 文件类型
+     * 原始数据
      */
-    private String mimeType;
+    private RawData rawData;
 
     /**
-     * 文件字节
+     * 标准文档数据
      */
-    private byte[] content;
-
-    CanonicalDocumentAggregate canonicalDocumentAggregate;
-
+    private CanonicalDocument canonicalDocument;
 }
