@@ -39,7 +39,7 @@
 
 | # | 决策 | 说明 |
 |---|------|------|
-| 1 | ContentTree 统一中间格式 | Markdown 是渲染结果（给 LLM 读），ContentTree 是结构中间层（给分块策略决策用） |
+| 1 | ContentTree 统一中间格式 | Markdown 是渲染结果（给 LLM 读），ContentTree 是结构中间层（给分块策略决策用）。**PDF 现阶段仅提取纯文本**，不做结构化解析（准确的结构化需借助 AI，后续迭代） |
 | 2 | 分块策略操作 ContentTree | 按节点类型和标题层级决策分块边界，TABLE 和 CODE 节点保持完整不被拆分 |
 | 3 | 策略模式路由解析器 | ParserRegistry 按 mimeType → SourceType → probe() 优先级路由 |
 | 4 | 编排器负责流程，DB 负责状态 | 处理管道由 Case 层编排器直接调用，状态存 DB。Kafka 仅发布 document.indexed 业务事件 |
