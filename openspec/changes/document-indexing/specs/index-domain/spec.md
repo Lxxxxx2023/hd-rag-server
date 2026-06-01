@@ -2,7 +2,7 @@
 
 ## Overview
 
-Index 域负责 RAG 系统的**文档处理管道**：文件导入 → 多格式解析 → CanonicalDocument → 清洗 → 分块 → 向量化 → 索引写入（pgvector + Elasticsearch）。DataSource 多源接入与 SchemaIndex 部分见 datasource-ingestion change；知识图谱抽取部分见 knowledge-graph change。
+Index 域负责 RAG 系统的**文档处理管道**：文件导入 → 多格式解析 → TextSegment 列表 → 清洗 → 分块 → 向量化 → 索引写入（pgvector + Elasticsearch）。DataSource 多源接入与 SchemaIndex 部分见 datasource-ingestion change；知识图谱抽取部分见 knowledge-graph change。
 
 ## 1. 文档导入
 
@@ -15,23 +15,23 @@ Index 域负责 RAG 系统的**文档处理管道**：文件导入 → 多格式
 ## 2. 文档解析
 
 - **REQ-DP-010**: 解析器采用策略模式（IParserStrategy），通过 ParserRegistry 根据 SourceType 和 mimeType 路由
-- **REQ-DP-011**: 所有解析器产出一致的 CanonicalDocument 格式（ContentTree）
-- **REQ-DP-012**: ContentTree 中每个节点保留溯源定位（sourcePointer）：PDF 页码、HTML CSS Selector、JSON Pointer 等
-- **REQ-DP-013**: ContentTree 中每个节点预渲染 markdown 和 plainText 两份文本：markdown 用于 embedding，plainText 用于 BM25
+- **REQ-DP-011**: 所有解析器产出统一的 `List<TextSegment>` 扁平列表格式。每个 TextSegment 是一个独立的语义单元（标题/段落/表格/代码块/列表项等）
+- **REQ-DP-012**: 每个 TextSegment 保留溯源定位（sourcePointer）：PDF 页码、Markdown 行号、HTML CSS Selector 等
+- **REQ-DP-013**: 每个 TextSegment 包含 text（原始文本）和 type（语义类型）。text 同时用于 embedding 和 BM25
 - **REQ-DP-014**: 解析失败需输出明确的错误信息（页码/行号/原因）
 - **REQ-DP-015**: 解析器支持 probe() 方法进行文件内容自动检测
 
 ## 3. 文档清洗
 
-- **REQ-DP-020**: 自动去除文档噪音（页眉页脚/水印/HTML导航栏），噪音标记在 ContentNode 生成阶段完成
+- **REQ-DP-020**: 自动去除文档噪音（页眉页脚/水印/HTML导航栏），在 TextSegment 列表上按规则过滤
 - **REQ-DP-021**: 支持按规则配置清洗策略（正则匹配删除/替换模式），清洗规则在 Service 级别配置
 
 ## 4. 分块策略
 
-- **REQ-DP-030**: 分块策略操作 ContentTree，按节点类型和标题层级决策分块边界。TABLE 和 CODE 保持完整不被拆分
-- **REQ-DP-031**: 按文档结构特征自动适配：标题层级丰富 → HeadingChunkStrategy / Q&A 模式 → FAQChunkStrategy / 否则 → FixedSizeChunkStrategy
-- **REQ-DP-032**: 支持 Service 级别配置 chunk_size 和 chunk_overlap
-- **REQ-DP-033**: 分块结果保留结构元数据（标题路径/页码/structurePath/sourcePointer 列表）
+- **REQ-DP-030**: 分块策略操作 `List<TextSegment>`，以 HEADING 类型 segment 作为天然分块边界。TABLE 和 CODE 类型 segment 保持完整不被拆分
+- **REQ-DP-031**: 同一 section 内的 segments 合并为一个 chunk；超过 token 限制时按滑动窗口切分
+- **REQ-DP-032**: 支持 Service 级别配置 chunk_size（token 数）和 chunk_overlap
+- **REQ-DP-033**: 分块结果保留结构元数据（所属 heading 标题路径、页码/行号等 sourcePointer）
 
 ## 5. 向量化与索引写入
 
