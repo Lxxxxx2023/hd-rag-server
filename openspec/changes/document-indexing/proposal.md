@@ -39,13 +39,13 @@
 
 | # | 决策 | 说明 |
 |---|------|------|
-| 1 | TextSegment 扁平列表作为统一中间格式 | 放弃树形 ContentTree，改为扁平的 `List<TextSegment>` 列表。每个 segment 是一个独立语义单元（标题/段落/表格/代码块等），携带类型、层级、溯源信息。**理由**：树结构对 PDF 等非结构化文档适配成本高且收益低，切块时仍需展平；扁平列表降低解析器实现门槛，切块逻辑变为线性扫描 |
-| 2 | 分块基于 heading 边界 + token 限制 | heading 类型的 segment 作为天然分块边界；同一 section 内的 segments 合并，超长则按 token 滑动窗口切分；TABLE/CODE segment 保持完整不拆分 |
+| 1 | TextSegment 扁平列表作为解析输出 | 放弃树形 ContentTree，改为扁平的 `List<TextSegment>` 列表。每个 segment 携带 type/level/text/sourcePointer。**解析器按格式能力尽力标注**：Markdown/HTML/DOCX 能识别 heading/table/code 等类型；PDF/TXT 仅输出 PARAGRAPH 类型的纯文本段落。不强求所有格式达到同一结构化水平 |
+| 2 | 切块策略自动路由，用户只配参数 | 单一 `ChunkingService` 内部根据 segments 是否包含 HEADING 自动选择路径：有 heading → 按标题边界分块；无 heading → 按 token 滑动窗口分块。用户仅配置 chunk_size 和 chunk_overlap，策略选择对用户透明 |
 | 3 | 策略模式路由解析器 | ParserRegistry 按 mimeType → SourceType → probe() 优先级路由 |
 | 4 | 编排器负责流程，DB 负责状态 | 处理管道由 Case 层编排器直接调用，状态存 DB。Kafka 仅发布 document.indexed 业务事件 |
 | 5 | Workload 路由：入口线程判断 | HTTP 请求线程 → 小文件(< 10MB)同步/大文件异步；定时任务/Webhook → 一律异步 |
-| 6 | 双索引写入 | Chunk.markdown → Embedding → pgvector；Chunk.plainText → ES BM25 |
-| 7 | 增量更新检测 | 文档更新时自动检测变更范围，仅重处理受影响的 chunks |
+| 6 | 双索引写入 | Chunk.text → Embedding → pgvector；Chunk.text → ES BM25 |
+| 7 | 增量更新检测 | 文档更新时自动检测变更范围，仅重处理受影响的 chunks（后续迭代） |
 
 ## Non-goals
 

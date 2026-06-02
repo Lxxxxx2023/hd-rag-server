@@ -34,6 +34,7 @@
         <mybatis-spring-boot.version>3.0.4</mybatis-spring-boot.version>
         <mysql-connector.version>9.1.0</mysql-connector.version>
         <druid.version>1.2.23</druid.version>
+        <tika.version>3.2.3</tika.version>
     </properties>
 
     <dependencyManagement>
@@ -104,10 +105,13 @@
                 <scope>provided</scope>
             </dependency>
             <!-- ================= file Utils ================== -->
+
             <dependency>
                 <groupId>org.apache.tika</groupId>
-                <artifactId>tika-core</artifactId>
-                <version>3.2.3</version>
+                <artifactId>tika-bom</artifactId>
+                <version>${tika.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
 

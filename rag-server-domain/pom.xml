@@ -41,6 +41,11 @@
             <groupId>com.rag-servers</groupId>
             <artifactId>rag-server-api</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parsers-standard-package</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>

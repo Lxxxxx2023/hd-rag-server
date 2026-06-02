@@ -15,9 +15,9 @@ Index 域负责 RAG 系统的**文档处理管道**：文件导入 → 多格式
 ## 2. 文档解析
 
 - **REQ-DP-010**: 解析器采用策略模式（IParserStrategy），通过 ParserRegistry 根据 SourceType 和 mimeType 路由
-- **REQ-DP-011**: 所有解析器产出统一的 `List<TextSegment>` 扁平列表格式。每个 TextSegment 是一个独立的语义单元（标题/段落/表格/代码块/列表项等）
-- **REQ-DP-012**: 每个 TextSegment 保留溯源定位（sourcePointer）：PDF 页码、Markdown 行号、HTML CSS Selector 等
-- **REQ-DP-013**: 每个 TextSegment 包含 text（原始文本）和 type（语义类型）。text 同时用于 embedding 和 BM25
+- **REQ-DP-011**: 所有解析器产出 `List<TextSegment>` 扁平列表。每个 TextSegment 含 type（SegmentType 枚举）、level（heading 层级）、text（文本内容）、sourcePointer（溯源定位）
+- **REQ-DP-012**: 解析器按格式能力尽力标注类型：Markdown/HTML/DOCX 识别 HEADING/TABLE/CODE/LIST/PARAGRAPH；PDF/TXT 仅输出 PARAGRAPH 类型。不强求所有格式达到同一结构化水平
+- **REQ-DP-013**: 每个 TextSegment 保留溯源定位（sourcePointer）：PDF 页码、Markdown 行号、HTML CSS Selector 等
 - **REQ-DP-014**: 解析失败需输出明确的错误信息（页码/行号/原因）
 - **REQ-DP-015**: 解析器支持 probe() 方法进行文件内容自动检测
 
@@ -28,10 +28,12 @@ Index 域负责 RAG 系统的**文档处理管道**：文件导入 → 多格式
 
 ## 4. 分块策略
 
-- **REQ-DP-030**: 分块策略操作 `List<TextSegment>`，以 HEADING 类型 segment 作为天然分块边界。TABLE 和 CODE 类型 segment 保持完整不被拆分
-- **REQ-DP-031**: 同一 section 内的 segments 合并为一个 chunk；超过 token 限制时按滑动窗口切分
-- **REQ-DP-032**: 支持 Service 级别配置 chunk_size（token 数）和 chunk_overlap
-- **REQ-DP-033**: 分块结果保留结构元数据（所属 heading 标题路径、页码/行号等 sourcePointer）
+- **REQ-DP-030**: 分块由统一的 ChunkingService 完成，内部根据 segments 是否包含 HEADING 类型自动路由：有 heading → 按标题边界分块；无 heading → 按 token 滑动窗口分块。策略选择对用户透明
+- **REQ-DP-031**: Heading 路径：以 HEADING segment 为分块边界，同 section 内 segments 合并为一个 chunk，heading 文本作为 chunk 前缀；超过 token 限制时按滑动窗口再切分
+- **REQ-DP-032**: Fixed-size 路径：全部 segments 文本拼接，按 chunk_size 滑动窗口切分，步长 = chunk_size - chunk_overlap，优先在段落边界切分
+- **REQ-DP-033**: TABLE 和 CODE 类型 segment 保持完整不被拆分（即使超长也作为独立 chunk）
+- **REQ-DP-034**: 支持 Service 级别配置 chunk_size（token 数，默认 512）和 chunk_overlap（默认 50）
+- **REQ-DP-035**: 分块结果保留结构元数据（所属 heading 标题路径、sourcePointer 列表）
 
 ## 5. 向量化与索引写入
 
@@ -43,8 +45,8 @@ Index 域负责 RAG 系统的**文档处理管道**：文件导入 → 多格式
 
 ### 索引写入
 
-- **REQ-IDX-001**: Chunk.markdown → Embedding API → 向量写入 pgvector
-- **REQ-IDX-002**: Chunk.plainText → ES BM25 (按 Service 物理隔离：`idx_{serviceId}_chunks`)
+- **REQ-IDX-001**: Chunk.text → Embedding API → 向量写入 pgvector
+- **REQ-IDX-002**: Chunk.text → ES BM25 (按 Service 物理隔离：`idx_{serviceId}_chunks`)
 - **REQ-IDX-003**: pgvector 和 ES 写入支持批量操作，单次最多 100 条
 - **REQ-IDX-004**: 索引写入失败时标记 chunk 状态为 failed，支持自动重试（最多 3 次）
 
