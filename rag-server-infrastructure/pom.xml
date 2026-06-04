@@ -17,6 +17,15 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>rag-server-domain</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
 
         <!-- Lombok -->
         <dependency>

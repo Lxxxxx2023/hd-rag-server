@@ -21,7 +21,7 @@ public class DocumentParserDispatch {
 
         for (Map.Entry<String, DocumentParser> documentParseEntry : documentParseMap.entrySet()) {
             DocumentParser parser = documentParseEntry.getValue();
-            if (parser.canHandle(fileType) && parser.canHandle(mimeType)) {
+            if (parser.canHandle(fileType) || parser.canHandle(mimeType)) {
                 return parser;
             }
         }

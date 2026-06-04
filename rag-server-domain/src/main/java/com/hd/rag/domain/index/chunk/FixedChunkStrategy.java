@@ -1,12 +1,14 @@
 package com.hd.rag.domain.index.chunk;
 
 import com.hd.rag.domain.index.parse.TextSegment;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Service
 public class FixedChunkStrategy implements ChunkStrategy {
     @Override
     public ChunkStrategyType getType() {
