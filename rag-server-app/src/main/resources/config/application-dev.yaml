@@ -25,6 +25,12 @@ ai:
     embeddingsPath: /compatible-mode/v1/embeddings
     dimensions: 1024
 
+minio:
+  endpoint: http://115.190.50.51/:9000
+  access-key: a2Eyec0iYiNU80UXThsM
+  secret-key: 2GPyC530bZK5DSr6ASOzUCfM317pL9xymd2djf5c
+  bucket-name: rag
+
 
 
 
