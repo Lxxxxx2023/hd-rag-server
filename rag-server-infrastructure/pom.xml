@@ -44,6 +44,13 @@
             <artifactId>minio</artifactId>
             <version>8.6.0</version>
         </dependency>
+
+        <!-- MinIO 依赖 OkHttp 4.x，显式声明确保传递依赖正确 -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
+        </dependency>
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
