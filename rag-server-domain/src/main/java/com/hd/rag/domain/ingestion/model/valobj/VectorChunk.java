@@ -1,4 +1,4 @@
-package com.hd.rag.domain.index.vector;
+package com.hd.rag.domain.ingestion.model.valobj;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;

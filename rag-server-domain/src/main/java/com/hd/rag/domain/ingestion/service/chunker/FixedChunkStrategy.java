@@ -1,6 +1,9 @@
-package com.hd.rag.domain.index.chunk;
+package com.hd.rag.domain.ingestion.service.chunker;
 
-import com.hd.rag.domain.index.parse.TextSegment;
+import com.hd.rag.domain.ingestion.model.valobj.ChunkOptions;
+import com.hd.rag.domain.ingestion.model.valobj.ChunkStrategyType;
+import com.hd.rag.domain.ingestion.model.valobj.TextChunk;
+import com.hd.rag.domain.ingestion.model.valobj.TextSegment;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -9,7 +12,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-public class FixedChunkStrategy implements ChunkStrategy {
+public class FixedChunkStrategy implements IChunkStrategy {
     @Override
     public ChunkStrategyType getType() {
         return ChunkStrategyType.FIXED;

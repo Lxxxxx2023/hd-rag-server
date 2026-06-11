@@ -1,13 +1,13 @@
-package com.hd.rag.infrastructure.oss;
+package com.hd.rag.domain.ingestion.adapter.port;
 
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 
 /**
- * 对象存储服务接口
+ * 对象存储服务端口接口
  */
-public interface OSSService {
+public interface IFileStoragePort {
 
     /**
      * 上传文件

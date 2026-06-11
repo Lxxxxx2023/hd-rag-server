@@ -1,11 +1,13 @@
-package com.hd.rag.domain.index.vector;
+package com.hd.rag.domain.ingestion.service.indexer;
+
+import com.hd.rag.domain.ingestion.model.valobj.VectorChunk;
 
 import java.util.List;
 
 /**
- * 向量存储服务
+ * 向量存储服务接口
  */
-public interface VectorStoreService {
+public interface IChunkIndexer {
 
     void batchInsert(List<VectorChunk> vectorChunks);
 

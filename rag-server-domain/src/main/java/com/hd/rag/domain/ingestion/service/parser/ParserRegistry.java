@@ -1,4 +1,4 @@
-package com.hd.rag.domain.index.parse;
+package com.hd.rag.domain.ingestion.service.parser;
 
 import lombok.AllArgsConstructor;
 import org.apache.tika.Tika;
@@ -8,19 +8,19 @@ import java.util.Map;
 
 @Service
 @AllArgsConstructor
-public class DocumentParserDispatch {
+public class ParserRegistry {
 
     private CommonParser commonParser;
 
-    private Map<String, DocumentParser> documentParseMap;
+    private Map<String, IDocumentParser> documentParseMap;
 
     private static final Tika TIKA = new Tika();
 
-    public DocumentParser dispatch(String mimeType, byte[] content) {
+    public IDocumentParser dispatch(String mimeType, byte[] content) {
         String fileType = TIKA.detect(content);
 
-        for (Map.Entry<String, DocumentParser> documentParseEntry : documentParseMap.entrySet()) {
-            DocumentParser parser = documentParseEntry.getValue();
+        for (Map.Entry<String, IDocumentParser> documentParseEntry : documentParseMap.entrySet()) {
+            IDocumentParser parser = documentParseEntry.getValue();
             if (parser.canHandle(fileType) || parser.canHandle(mimeType)) {
                 return parser;
             }

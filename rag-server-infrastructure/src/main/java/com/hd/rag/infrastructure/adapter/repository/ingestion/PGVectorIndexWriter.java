@@ -1,7 +1,9 @@
-package com.hd.rag.domain.index.vector;
+package com.hd.rag.infrastructure.adapter.repository.ingestion;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson2.JSON;
+import com.hd.rag.domain.ingestion.model.valobj.VectorChunk;
+import com.hd.rag.domain.ingestion.service.indexer.IChunkIndexer;
 import com.pgvector.PGvector;
 import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -17,11 +19,10 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Service("pgVectorStore")
 @AllArgsConstructor
-public class PGVectorStoreServiceImpl implements VectorStoreService, InitializingBean {
+public class PGVectorIndexWriter implements IChunkIndexer, InitializingBean {
 
     private final JdbcTemplate jdbcTemplate;
 

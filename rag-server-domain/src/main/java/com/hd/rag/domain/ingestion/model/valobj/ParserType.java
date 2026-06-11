@@ -1,15 +1,15 @@
-package com.hd.rag.domain.index.parse;
+package com.hd.rag.domain.ingestion.model.valobj;
 
 import lombok.Getter;
 
 @Getter
-public enum ParserEnum {
+public enum ParserType {
     MARKDOWN("markdown"),
     COMMON("common");
     private final String type;
 
 
-    ParserEnum(String type) {
+    ParserType(String type) {
         this.type = type;
     }
 

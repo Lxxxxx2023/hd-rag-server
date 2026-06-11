@@ -1,4 +1,4 @@
-package com.hd.rag.domain.index.parse;
+package com.hd.rag.domain.ingestion.model.valobj;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

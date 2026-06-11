@@ -1,5 +1,6 @@
-package com.hd.rag.infrastructure.oss;
+package com.hd.rag.infrastructure.adapter.port.ingestion;
 
+import com.hd.rag.domain.ingestion.adapter.port.IFileStoragePort;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -19,7 +20,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MinioOSSServiceImpl implements OSSService {
+public class MinioFileStoragePort implements IFileStoragePort {
 
     private final MinioClient minioClient;
 
