@@ -1,5 +1,6 @@
 package com.hd.rag.infrastructure.adapter.port.ingestion;
 
+import cn.hutool.core.util.IdUtil;
 import com.hd.rag.domain.ingestion.adapter.port.IFileStoragePort;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
@@ -28,9 +29,13 @@ public class MinioFileStoragePort implements IFileStoragePort {
     private String bucketName;
 
     @Override
-    public String uploadFile(MultipartFile file) throws Exception {
+    public String uploadFile(MultipartFile file, String pathPrefix) throws Exception {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("file must not be null or empty");
+        }
+
+        if(pathPrefix != null && pathPrefix.startsWith("/")) {
+            throw new IllegalArgumentException("不支持的文件路径，不能已'/' 开头");
         }
 
         String originalFilename = file.getOriginalFilename();
@@ -38,7 +43,7 @@ public class MinioFileStoragePort implements IFileStoragePort {
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        String objectName = UUID.randomUUID().toString() + extension;
+        String objectName = buildObjectName(pathPrefix, extension);
 
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(PutObjectArgs.builder()
@@ -51,6 +56,16 @@ public class MinioFileStoragePort implements IFileStoragePort {
 
         log.info("Uploaded file: {} -> {}", originalFilename, objectName);
         return objectName;
+    }
+
+    private String buildObjectName(String pathPrefix, String extension) {
+        String fileName = IdUtil.getSnowflakeNextIdStr() + extension;
+        if (pathPrefix == null || pathPrefix.isEmpty()) {
+            return fileName;
+        }
+
+        // 确保以 / 结尾
+        return pathPrefix.endsWith("/") ? pathPrefix + fileName : pathPrefix + "/" + fileName;
     }
 
     @Override

@@ -3,9 +3,7 @@ package com.hd.rag.trigger.http.ingestion;
 import com.hd.rag.api.ingestion.dto.request.KnowledgeBaseCreateReqDTO;
 import com.hd.rag.api.ingestion.dto.request.KnowledgeBaseUpdateReqDTO;
 import com.hd.rag.api.ingestion.dto.response.KnowledgeBaseRespDTO;
-import com.hd.rag.domain.ingestion.model.entity.KnowledgeBaseEntity;
 import com.hd.rag.domain.ingestion.service.IKnowledgeBaseService;
-import cn.dev33.satoken.stp.StpUtil;
 import com.hd.rag.types.convention.Result;
 import com.hd.rag.types.web.Results;
 import jakarta.annotation.Resource;
@@ -21,10 +19,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * 知识库接口
+ * 知识库controller
  */
 @RestController
 @RequestMapping("/knowledgebase")
@@ -35,64 +32,29 @@ public class KnowledgeBaseController {
 
     @PostMapping("/create")
     public Result<KnowledgeBaseRespDTO> create(@RequestBody @Valid KnowledgeBaseCreateReqDTO reqDTO) {
-        KnowledgeBaseEntity knowledgeBaseEntity = new KnowledgeBaseEntity();
-        knowledgeBaseEntity.setName(reqDTO.name());
-        knowledgeBaseEntity.setIntro(reqDTO.intro());
-        knowledgeBaseEntity.setSearchSet(reqDTO.searchSet());
-        knowledgeBaseEntity.setSegmentSet(reqDTO.segmentSet());
-        String userId = StpUtil.isLogin() ? StpUtil.getLoginIdAsString() : "SYSTEM";
-        knowledgeBaseEntity.setCreateBy(userId);
-        knowledgeBaseEntity.setUpdateBy(userId);
-        KnowledgeBaseEntity created = knowledgeBaseService.create(knowledgeBaseEntity);
-        return Results.success(toRespDTO(created));
+        return Results.success(knowledgeBaseService.create(reqDTO));
     }
 
     @PutMapping("/update")
     public Result<KnowledgeBaseRespDTO> update(@RequestBody @Valid KnowledgeBaseUpdateReqDTO reqDTO) {
-        KnowledgeBaseEntity knowledgeBaseEntity = new KnowledgeBaseEntity();
-        knowledgeBaseEntity.setId(reqDTO.id());
-        knowledgeBaseEntity.setName(reqDTO.name());
-        knowledgeBaseEntity.setIntro(reqDTO.intro());
-        knowledgeBaseEntity.setSearchSet(reqDTO.searchSet());
-        String userId = StpUtil.isLogin() ? StpUtil.getLoginIdAsString() : "SYSTEM";
-        knowledgeBaseEntity.setUpdateBy(userId);
-        KnowledgeBaseEntity updated = knowledgeBaseService.update(knowledgeBaseEntity);
-        return Results.success(toRespDTO(updated));
+        return Results.success(knowledgeBaseService.update(reqDTO));
     }
 
     @GetMapping("/get/{id}")
     public Result<KnowledgeBaseRespDTO> getById(@PathVariable String id) {
-        KnowledgeBaseEntity knowledgeBaseEntity = knowledgeBaseService.getById(id);
-        return Results.success(toRespDTO(knowledgeBaseEntity));
+        return Results.success(knowledgeBaseService.getById(id));
     }
 
     @GetMapping("/list")
     public Result<List<KnowledgeBaseRespDTO>> list(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        List<KnowledgeBaseEntity> list = knowledgeBaseService.list(new KnowledgeBaseEntity(), pageNum, pageSize);
-        List<KnowledgeBaseRespDTO> respList = list.stream()
-                .map(this::toRespDTO)
-                .collect(Collectors.toList());
-        return Results.success(respList);
+        return Results.success(knowledgeBaseService.list(pageNum, pageSize));
     }
 
     @DeleteMapping("/delete/{id}")
     public Result<Void> delete(@PathVariable String id) {
         knowledgeBaseService.delete(id);
         return Results.success();
-    }
-
-    private KnowledgeBaseRespDTO toRespDTO(KnowledgeBaseEntity kb) {
-        return new KnowledgeBaseRespDTO(
-                kb.getId(),
-                kb.getName(),
-                kb.getIntro(),
-                kb.getSearchSet(),
-                kb.getSegmentSet(),
-                kb.getCreateBy(),
-                kb.getCreateTime(),
-                kb.getUpdateBy(),
-                kb.getUpdateTime());
     }
 }

@@ -36,6 +36,7 @@
         <mysql-connector.version>9.1.0</mysql-connector.version>
         <druid.version>1.2.23</druid.version>
         <tika.version>3.2.3</tika.version>
+        <transmittable-thread-local.version>2.14.5</transmittable-thread-local.version>
     </properties>
 
     <dependencyManagement>
@@ -146,6 +147,13 @@
                 <groupId>com.mysql</groupId>
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-connector.version}</version>
+            </dependency>
+
+            <!-- ==================== Transmittable-Thread-Local ==================== -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>transmittable-thread-local</artifactId>
+                <version>${transmittable-thread-local.version}</version>
             </dependency>
 
             <!-- ==================== Druid ==================== -->

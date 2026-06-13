@@ -1,6 +1,8 @@
 package com.hd.rag.domain.ingestion.service;
 
-import com.hd.rag.domain.ingestion.model.entity.KnowledgeBaseEntity;
+import com.hd.rag.api.ingestion.dto.request.KnowledgeBaseCreateReqDTO;
+import com.hd.rag.api.ingestion.dto.request.KnowledgeBaseUpdateReqDTO;
+import com.hd.rag.api.ingestion.dto.response.KnowledgeBaseRespDTO;
 
 import java.util.List;
 
@@ -12,22 +14,22 @@ public interface IKnowledgeBaseService {
     /**
      * 创建知识库
      */
-    KnowledgeBaseEntity create(KnowledgeBaseEntity knowledgeBaseEntity);
+    KnowledgeBaseRespDTO create(KnowledgeBaseCreateReqDTO reqDTO);
 
     /**
      * 更新知识库
      */
-    KnowledgeBaseEntity update(KnowledgeBaseEntity knowledgeBaseEntity);
+    KnowledgeBaseRespDTO update(KnowledgeBaseUpdateReqDTO reqDTO);
 
     /**
      * 根据 ID 查询
      */
-    KnowledgeBaseEntity getById(String id);
+    KnowledgeBaseRespDTO getById(String id);
 
     /**
      * 条件查询列表
      */
-    List<KnowledgeBaseEntity> list(KnowledgeBaseEntity query, Integer pageNum, Integer pageSize);
+    List<KnowledgeBaseRespDTO> list(Integer pageNum, Integer pageSize);
 
     /**
      * 逻辑删除

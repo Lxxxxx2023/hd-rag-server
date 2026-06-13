@@ -10,22 +10,32 @@ import java.io.InputStream;
 public interface IFileStoragePort {
 
     /**
-     * 上传文件
+     * 上传文件到根目录
      * @param file 文件
-     * @return 存储服务中的唯一文件名
+     * @return 存储服务中的文件路径（含路径前缀）
      */
-    String uploadFile(MultipartFile file) throws Exception;
+    default String uploadFile(MultipartFile file) throws Exception {
+        return uploadFile(file, "");
+    }
+
+    /**
+     * 上传文件到指定路径
+     * @param file       文件
+     * @param pathPrefix 存储路径前缀（如 "kb/KB001/"，不以 / 开头，以 / 结尾）
+     * @return 存储服务中的文件路径（含路径前缀）
+     */
+    String uploadFile(MultipartFile file, String pathPrefix) throws Exception;
 
     /**
      * 获取文件 InputStream
-     * @param fileName 文件名
+     * @param fileName 文件路径（含路径前缀）
      * @return 文件流
      */
     InputStream downloadFile(String fileName) throws Exception;
 
     /**
      * 删除文件
-     * @param fileName 文件明
+     * @param fileName 文件路径（含路径前缀）
      */
     void deleteFile(String fileName) throws Exception;
 }
