@@ -1,4 +1,4 @@
-package com.hd.rag.infrastructure.adapter.repository.ingestion;
+package com.hd.rag.infrastructure.adapter.repository;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson2.JSON;

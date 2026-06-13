@@ -10,6 +10,27 @@ spring:
       username: postgres
       password: 123456
       driver-class-name: org.postgresql.Driver
+    mysql:
+      url: jdbc:mysql://127.0.0.1:3306/rag_server?useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Shanghai
+      username: root
+      password: 123456
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+  flyway:
+    # 如果启动的时候需要flyway管理sql脚本的话，将enabled设置为true
+    enabled: true
+    # 如果数据库不是空表，需要设置成 true，否则启动报错
+    baseline-on-migrate: true
+    # 迁移时是否校验
+    validate-on-migrate: false
+    # 迁移sql脚本文件存放路径，默认db/migration
+    locations: classpath:db/migration
+    # 迁移sql脚本文件名称的前缀，默认V
+    sql-migration-prefix: V
+    # 迁移sql脚本文件名称的分隔符，默认2个下划线__
+    sql-migration-separator: __
+    # 迁移sql脚本文件名称的后缀
+    sql-migration-suffixes: .sql
 
 ai:
   chat:

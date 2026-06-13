@@ -1,13 +1,13 @@
 # Tasks: Platform Foundation
 
-## Schema: spec-driven | Progress: 0/38 tasks
+## Schema: spec-driven | Progress: 4/38 tasks
 
 ---
 
 ## 1. Domain Model (5 tasks)
 
 - [ ] PA-001 定义 Service 聚合根与配置值对象
-- [ ] PA-002 定义 KnowledgeBase 聚合根与文档管理接口
+- [x] PA-002 定义 KnowledgeBase 聚合根与文档管理接口
 - [ ] PA-003 定义 ServiceKBGrant 关联实体与授权类型枚举
 - [ ] PA-004 实现 KB 删除授权检查领域服务
 - [ ] PA-005 实现 Service 删除级联清理领域服务
@@ -15,7 +15,7 @@
 ## 2. Repository & Persistence (5 tasks)
 
 - [ ] PA-006 实现 ServiceRepository 及 MyBatis 持久化
-- [ ] PA-007 实现 KnowledgeBaseRepository 及 MyBatis 持久化
+- [x] PA-007 实现 KnowledgeBaseRepository 及 MyBatis 持久化
 - [ ] PA-008 实现 ServiceKBGrantRepository 及 MyBatis 持久化
 - [ ] PA-009 实现授权生效/撤销触发 Index 处理链的领域事件
 - [ ] PA-010 创建 raw_documents / service_chunks / service_vectors 表 DDL
@@ -28,7 +28,7 @@
 ## 4. Application & API (4 tasks)
 
 - [ ] PA-013 实现 ServiceManagementAppService (CRUD)
-- [ ] PA-014 实现 KnowledgeBaseManagementAppService (CRUD)
+- [x] PA-014 实现 KnowledgeBaseManagementAppService (CRUD)
 - [ ] PA-015 实现 GrantManagementAppService (授权/撤销)
 - [ ] PA-016 实现 Service/KB Management API Controller
 
@@ -63,7 +63,7 @@
 
 ## 8. Core Database Tables (3 tasks)
 
-- [ ] INF-001 创建 PostgreSQL 核心表结构（services, knowledge_bases, service_kb_grants, api_keys, audit_logs）
+- [ ] INF-001 创建 MySQL 核心表结构（services, knowledge_bases, service_kb_grants, api_keys, audit_logs）— 部分完成：t_knowledge_base 已创建
 - [ ] INF-002 配置 JSONB Service 配置字段
 - [ ] INF-003 实现审计日志按月分表 DDL 与自动归档
 

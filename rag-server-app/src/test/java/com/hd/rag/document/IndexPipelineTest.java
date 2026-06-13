@@ -8,7 +8,7 @@ import com.hd.rag.domain.ingestion.service.embedder.IEmbeddingService;
 import com.hd.rag.domain.ingestion.service.parser.IDocumentParser;
 import com.hd.rag.domain.ingestion.service.parser.ParserRegistry;
 import com.hd.rag.domain.ingestion.model.valobj.TextSegment;
-import com.hd.rag.infrastructure.adapter.repository.ingestion.PGVectorIndexWriter;
+import com.hd.rag.infrastructure.adapter.repository.PGVectorIndexWriter;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
