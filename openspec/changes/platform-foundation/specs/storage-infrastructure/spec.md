@@ -8,7 +8,7 @@
 
 ### 数据库 (PostgreSQL)
 
-- **REQ-INF-001**: PostgreSQL 存储所有关系数据：services, knowledge_bases, service_kb_grants, api_keys, audit_logs
+- **REQ-INF-001**: MySQL 存储所有关系数据：t_user, t_knowledge_base, services, knowledge_bases, service_kb_grants, api_keys, audit_logs
 - **REQ-INF-002**: Service 配置使用 JSONB 类型存储，灵活扩展
 - **REQ-INF-003**: 审计日志按月分表，自动归档
 

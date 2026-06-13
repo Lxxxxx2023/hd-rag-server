@@ -2,9 +2,17 @@
 
 ## Overview
 
-定义 RAG 中台的 API Key 管理、RBAC 权限控制、审计日志和网络安全。
+定义 RAG 中台的用户认证、API Key 管理、RBAC 权限控制、审计日志和网络安全。
 
 ## Requirements
+
+### 用户认证
+
+- **REQ-SEC-000**: 用户通过用户名+密码登录，密码使用 BCrypt 哈希存储
+- **REQ-SEC-000a**: 认证成功后返回 JWT Token，后续请求通过 `Authorization: Bearer <token>` 携带
+- **REQ-SEC-000b**: 用户注册时自动登录并返回 Token
+- **REQ-SEC-000c**: 请求链路中通过 `StpUtil.getLoginIdAsString()` 获取当前用户ID，替代硬编码审计字段
+- **REQ-SEC-000d**: 用户上下文基于 Sa-Token 实现，JWT 模式，Token 有效期 24 小时
 
 ### API Key 管理
 

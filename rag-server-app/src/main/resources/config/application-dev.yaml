@@ -55,3 +55,11 @@ minio:
 
 
 
+
+sa-token:
+  token-name: Authorization
+  token-prefix: Bearer
+  timeout: 86400
+  active-timeout: -1
+  is-log: true
+  jwt-secret-key: rag-server-jwt-secret-2026

@@ -1,6 +1,17 @@
 # Tasks: Platform Foundation
 
-## Schema: spec-driven | Progress: 4/38 tasks
+## Schema: spec-driven | Progress: 10/48 tasks
+
+---
+
+## 0. User Authentication (6 tasks) ✅
+
+- [x] SEC-000 创建 UserEntity 与 IUserRepository 领域端口
+- [x] SEC-000a 实现 UserServiceImpl — BCrypt 密码哈希 + 用户名唯一性校验
+- [x] SEC-000b 创建 t_user 表 Flyway 迁移 (V2)
+- [x] SEC-000c 实现 UserPO / UserDao / UserRepository 持久化适配器
+- [x] SEC-000d 集成 Sa-Token JWT — 登录/注册返回 Token，请求上下文 StpUtil
+- [x] SEC-000e 改造 KnowledgeBaseController — createBy/updateBy 从 StpUtil 获取真实用户ID
 
 ---
 

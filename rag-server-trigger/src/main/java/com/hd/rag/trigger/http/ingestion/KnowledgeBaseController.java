@@ -5,6 +5,7 @@ import com.hd.rag.api.ingestion.dto.request.KnowledgeBaseUpdateReqDTO;
 import com.hd.rag.api.ingestion.dto.response.KnowledgeBaseRespDTO;
 import com.hd.rag.domain.ingestion.model.entity.KnowledgeBaseEntity;
 import com.hd.rag.domain.ingestion.service.IKnowledgeBaseService;
+import cn.dev33.satoken.stp.StpUtil;
 import com.hd.rag.types.convention.Result;
 import com.hd.rag.types.web.Results;
 import jakarta.annotation.Resource;
@@ -39,8 +40,9 @@ public class KnowledgeBaseController {
         knowledgeBaseEntity.setIntro(reqDTO.intro());
         knowledgeBaseEntity.setSearchSet(reqDTO.searchSet());
         knowledgeBaseEntity.setSegmentSet(reqDTO.segmentSet());
-        knowledgeBaseEntity.setCreateBy("SYSTEM");
-        knowledgeBaseEntity.setUpdateBy("SYSTEM");
+        String userId = StpUtil.isLogin() ? StpUtil.getLoginIdAsString() : "SYSTEM";
+        knowledgeBaseEntity.setCreateBy(userId);
+        knowledgeBaseEntity.setUpdateBy(userId);
         KnowledgeBaseEntity created = knowledgeBaseService.create(knowledgeBaseEntity);
         return Results.success(toRespDTO(created));
     }
@@ -52,7 +54,8 @@ public class KnowledgeBaseController {
         knowledgeBaseEntity.setName(reqDTO.name());
         knowledgeBaseEntity.setIntro(reqDTO.intro());
         knowledgeBaseEntity.setSearchSet(reqDTO.searchSet());
-        knowledgeBaseEntity.setUpdateBy("SYSTEM");
+        String userId = StpUtil.isLogin() ? StpUtil.getLoginIdAsString() : "SYSTEM";
+        knowledgeBaseEntity.setUpdateBy(userId);
         KnowledgeBaseEntity updated = knowledgeBaseService.update(knowledgeBaseEntity);
         return Results.success(toRespDTO(updated));
     }
