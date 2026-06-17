@@ -3,7 +3,6 @@ package com.hd.rag.domain.ingestion.adapter.repository;
 import com.hd.rag.domain.ingestion.model.entity.KnowledgeBaseEntity;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 知识库仓储接口（Port）
@@ -23,7 +22,7 @@ public interface IKnowledgeBaseRepository {
     /**
      * 根据 ID 查询
      */
-    Optional<KnowledgeBaseEntity> findById(String id);
+    KnowledgeBaseEntity findById(String id);
 
     /**
      * 条件查询列表（分页）

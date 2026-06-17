@@ -8,8 +8,6 @@ import com.hd.rag.infrastructure.dao.po.UserPO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
 /**
  * 用户仓储适配器
  */
@@ -25,15 +23,15 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public Optional<UserEntity> findById(String id) {
-        return Optional.ofNullable(userDao.selectById(id)).map(this::toDomain);
+    public UserEntity findById(String id) {
+        return toDomain(userDao.selectById(id));
     }
 
     @Override
-    public Optional<UserEntity> findByUsername(String username) {
+    public UserEntity findByUsername(String username) {
         LambdaQueryWrapper<UserPO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserPO::getUsername, username);
-        return Optional.ofNullable(userDao.selectOne(wrapper)).map(this::toDomain);
+        return toDomain(userDao.selectOne(wrapper));
     }
 
     private UserPO toPO(UserEntity entity) {

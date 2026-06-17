@@ -37,6 +37,7 @@
         <druid.version>1.2.23</druid.version>
         <tika.version>3.2.3</tika.version>
         <transmittable-thread-local.version>2.14.5</transmittable-thread-local.version>
+        <fastjson2-version>2.0.43</fastjson2-version>
     </properties>
 
     <dependencyManagement>
@@ -161,6 +162,12 @@
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid-spring-boot-3-starter</artifactId>
                 <version>${druid.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2-version}</version>
             </dependency>
         </dependencies>
 

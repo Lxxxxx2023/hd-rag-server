@@ -22,8 +22,10 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public UserEntity login(String username, String rawPassword) {
-        UserEntity user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ClientException("用户名或密码错误"));
+        UserEntity user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new ClientException("用户名或密码错误");
+        }
         if (!BCrypt.checkpw(rawPassword, user.getPassword())) {
             throw new ClientException(BaseErrorCode.PASSWORD_VERIFY_ERROR);
         }
@@ -32,9 +34,9 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public UserEntity register(String username, String rawPassword) {
-        userRepository.findByUsername(username).ifPresent(u -> {
+        if (userRepository.findByUsername(username) != null) {
             throw new ClientException(BaseErrorCode.USER_NAME_EXIST_ERROR);
-        });
+        }
 
         UserEntity entity = new UserEntity();
         entity.setId(IdUtil.getSnowflakeNextIdStr());
@@ -51,7 +53,10 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public UserEntity getById(String id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new ClientException("用户不存在"));
+        UserEntity user = userRepository.findById(id);
+        if (user == null) {
+            throw new ClientException("用户不存在");
+        }
+        return user;
     }
 }

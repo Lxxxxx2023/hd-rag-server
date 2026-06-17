@@ -10,11 +10,11 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 知识库文档持久化对象（MyBatis-Plus 映射）
+ * 数据源持久化对象
  */
 @Data
-@TableName("t_knowledge_document")
-public class KnowledgeDocumentPO {
+@TableName("t_data_source")
+public class DataSourcePO {
 
     /** 主键id */
     @TableId(type = IdType.INPUT)
@@ -24,45 +24,21 @@ public class KnowledgeDocumentPO {
     @TableField("kb_id")
     private String kbId;
 
-    /** 文档名称 */
-    @TableField("doc_name")
-    private String docName;
+    /** 数据源名称 */
+    @TableField("name")
+    private String name;
 
-    /** 文件大小 */
-    @TableField("file_size")
-    private Long fileSize;
+    /** 数据源描述 */
+    @TableField("description")
+    private String description;
 
-    /** 文件类型 */
-    @TableField("file_type")
-    private String fileType;
-
-    /** 文件地址 */
-    @TableField("file_url")
-    private String fileUrl;
-
-    /** 处理状态（参考 {@link com.hd.rag.domain.ingestion.model.valobj.DocumentStatus}） */
-    @TableField("status")
-    private Integer status;
-
-    /** 关联管道id */
-    @TableField("pipeline_id")
-    private String pipelineId;
-
-    /** 错误信息 */
-    @TableField("error_message")
-    private String errorMessage;
-
-    /** 分块总数 */
-    @TableField("total_chunks")
-    private Integer totalChunks;
-
-    /** 已完成分块数 */
-    @TableField("chunk_count")
-    private Integer chunkCount;
-
-    /** 文档来源类型 */
+    /** 数据源类型 */
     @TableField("source_type")
     private String sourceType;
+
+    /** 数据源配置（JSON） */
+    @TableField("config_json")
+    private String configJson;
 
     /** 创建人 */
     @TableField("create_by")

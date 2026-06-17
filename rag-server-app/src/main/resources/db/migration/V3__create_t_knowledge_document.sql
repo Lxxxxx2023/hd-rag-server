@@ -7,7 +7,7 @@ CREATE TABLE t_knowledge_document(
     `file_size`     BIGINT       NOT NULL COMMENT '文件大小',
     `file_type`     VARCHAR(32)  NOT NULL COMMENT '文件类型',
     `file_url`      VARCHAR(255) NOT NULL COMMENT '文件地址',
-    `status`        VARCHAR(32)  NOT NULL DEFAULT 'UPLOADED' COMMENT '处理状态',
+    `status`        INT          NOT NULL DEFAULT 0 COMMENT '处理状态（0:已上传 1:解析中 2:解析完成 3:清洗中 4:清洗完成 5:分块中 6:分块完成 7:向量化中 8:向量化完成 9:索引写入中 10:就绪 -1:失败）',
     `pipeline_id`   CHAR(32)     NULL COMMENT '关联管道id',
     `error_message` TEXT         NULL COMMENT '错误信息',
     `total_chunks`  INT          NULL COMMENT '分块总数',

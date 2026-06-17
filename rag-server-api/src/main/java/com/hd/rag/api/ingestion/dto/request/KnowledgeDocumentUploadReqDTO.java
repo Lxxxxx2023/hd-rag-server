@@ -7,9 +7,11 @@ import org.springframework.web.multipart.MultipartFile;
  * @param kbId 知识库id
  * @param file 文件
  * @param path 文件路径
+ * @param pipelineId 流水线id
  */
 public record KnowledgeDocumentUploadReqDTO (
         String kbId,
         MultipartFile file,
-        String path){
+        String path,
+        String pipelineId){
 }

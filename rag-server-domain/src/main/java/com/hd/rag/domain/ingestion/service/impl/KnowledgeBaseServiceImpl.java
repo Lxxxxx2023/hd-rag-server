@@ -46,8 +46,10 @@ public class KnowledgeBaseServiceImpl implements IKnowledgeBaseService {
 
     @Override
     public KnowledgeBaseRespDTO update(KnowledgeBaseUpdateReqDTO reqDTO) {
-        KnowledgeBaseEntity entity = knowledgeBaseRepository.findById(reqDTO.id())
-                .orElseThrow(() -> new ClientException("知识库不存在"));
+        KnowledgeBaseEntity entity = knowledgeBaseRepository.findById(reqDTO.id());
+        if (entity == null) {
+            throw new ClientException("知识库不存在");
+        }
         entity.setName(reqDTO.name());
         entity.setIntro(reqDTO.intro());
         entity.setSearchSet(reqDTO.searchSet());
@@ -59,8 +61,10 @@ public class KnowledgeBaseServiceImpl implements IKnowledgeBaseService {
 
     @Override
     public KnowledgeBaseRespDTO getById(String id) {
-        KnowledgeBaseEntity entity = knowledgeBaseRepository.findById(id)
-                .orElseThrow(() -> new ClientException("知识库不存在"));
+        KnowledgeBaseEntity entity = knowledgeBaseRepository.findById(id);
+        if (entity == null) {
+            throw new ClientException("知识库不存在");
+        }
         return toRespDTO(entity);
     }
 
@@ -73,8 +77,9 @@ public class KnowledgeBaseServiceImpl implements IKnowledgeBaseService {
 
     @Override
     public void delete(String id) {
-        knowledgeBaseRepository.findById(id)
-                .orElseThrow(() -> new ClientException("知识库不存在"));
+        if (knowledgeBaseRepository.findById(id) == null) {
+            throw new ClientException("知识库不存在");
+        }
         knowledgeBaseRepository.deleteById(id);
     }
 

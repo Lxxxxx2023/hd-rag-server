@@ -12,7 +12,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -35,9 +34,12 @@ public class KnowledgeBaseRepository implements IKnowledgeBaseRepository {
     }
 
     @Override
-    public Optional<KnowledgeBaseEntity> findById(String id) {
-        return Optional.ofNullable(knowledgeBaseDao.selectById(id))
-                .map(this::toDomain);
+    public KnowledgeBaseEntity findById(String id) {
+        KnowledgeBasePO po = knowledgeBaseDao.selectById(id);
+        if (po == null) {
+            return null;
+        }
+        return toDomain(po);
     }
 
     @Override
